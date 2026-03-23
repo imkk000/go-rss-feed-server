@@ -4,15 +4,19 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/go-resty/resty/v2"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
+	"github.com/mmcdole/gofeed"
 	"github.com/rs/zerolog/log"
 )
 
 var (
 	configFilename = "config.yaml"
-	userAgent      = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+	userAgent      = ""
 	addr           = "127.0.0.1:9000"
+	httpClient     = resty.New()
+	feedParser     = gofeed.NewParser()
 )
 
 func main() {

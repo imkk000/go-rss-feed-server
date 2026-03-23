@@ -16,20 +16,40 @@ func TestLoadConfigProgram(t *testing.T) {
 		Assert  func(wantErr error)
 	}{
 		{
-			Name:    "failed",
-			WantErr: errors.New("SyntaxError: myfeed: Line 1:1 Unexpected token ."),
+			Name:    "script: failed",
+			WantErr: errors.New("SyntaxError: myfeed: Line 6:14 Unexpected token ;"),
 			Assert: func(wantErr error) {
-				err := LoadConfigProgram("./testdata/failed.yaml")
+				err := LoadConfigProgram("./testdata/script_failed.yaml")
 				err = errors.Unwrap(err)
 
 				assert.EqualError(t, err, wantErr.Error())
 			},
 		},
 		{
-			Name:    "success",
+			Name:    "script: success",
 			WantErr: noErr,
 			Assert: func(wantErr error) {
-				err := LoadConfigProgram("./testdata/success.yaml")
+				err := LoadConfigProgram("./testdata/script_success.yaml")
+				err = errors.Unwrap(err)
+
+				assert.ErrorIs(t, err, wantErr)
+			},
+		},
+		{
+			Name:    "file: failed",
+			WantErr: errors.New("SyntaxError: myfeed: Line 1:1 Unexpected token ."),
+			Assert: func(wantErr error) {
+				err := LoadConfigProgram("./testdata/file_failed.yaml")
+				err = errors.Unwrap(err)
+
+				assert.EqualError(t, err, wantErr.Error())
+			},
+		},
+		{
+			Name:    "file: success",
+			WantErr: noErr,
+			Assert: func(wantErr error) {
+				err := LoadConfigProgram("./testdata/file_success.yaml")
 
 				assert.ErrorIs(t, err, wantErr)
 			},

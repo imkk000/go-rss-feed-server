@@ -1,6 +1,7 @@
 ---
 version: 3
 tasks:
+  clean: rm rss-feed-server.tar cover.html cover.out
   build:
     cmds:
       - docker build -t rss-feed-server .
