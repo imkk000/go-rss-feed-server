@@ -57,10 +57,18 @@ convertMapFeed(resp)
     find: func(selector: string) object
 } = parseHTML(html: string)
 
-const html = parseHTML(content)
+const html = parseHTML(content: string)
 html.
     find(".container").
     each((i, elm) => console.log(elm.attr("src")))
+
+// parse awesome markdown
+{
+    Topic: string
+    Title: string
+    Link: string
+    Description: string
+}: []Awesome = parseMarkdownAwesome(content: string)
 
 // implement using fmt.Printf("%#v\n", v)
 console.log(val: any)

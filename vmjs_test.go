@@ -11,6 +11,55 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParseMarkdownAwesomeFn(t *testing.T) {
+	wantAwesome := []Awesome{
+		{
+			Topic:       "Actor Model",
+			Title:       "asyncmachine-go/pkg/machine",
+			Link:        "https://github.com/pancsta/asyncmachine-go/tree/main/pkg/machine",
+			Description: "Graph control flow library (AOP, actor, state-machine).",
+		},
+		{
+			Topic:       "Actor Model",
+			Title:       "Ergo",
+			Link:        "https://github.com/ergo-services/ergo",
+			Description: "An actor-based Framework with network transparency for creating event-driven architecture in Golang. Inspired by Erlang.",
+		},
+	}
+
+	vm := sobek.New()
+	err := SetParseMarkdownAwesomeFn(vm)
+	assert.NoError(t, err)
+
+	fn, ok := sobek.AssertFunction(vm.Get("parseMarkdownAwesome"))
+	assert.True(t, ok)
+
+	source := `
+## Contents
+
+<details>
+<summary>Expand contents</summary>
+  - [Websites](#websites)
+    - [Tutorials](#tutorials)
+    - [Guided Learning](#guided-learning)
+
+**[⬆ back to top](#contents)**
+
+</details>
+
+## Actor Model
+
+_Libraries for building actor-based programs._
+
+- [asyncmachine-go/pkg/machine](https://github.com/pancsta/asyncmachine-go/tree/main/pkg/machine) - Graph control flow library (AOP, actor, state-machine).
+- [Ergo](https://github.com/ergo-services/ergo) - An actor-based Framework with network transparency for creating event-driven architecture in Golang. Inspired by Erlang.
+`
+	result, err := fn(sobek.Undefined(), vm.ToValue(source))
+	m := result.Export().([]Awesome)
+
+	assert.Equal(t, wantAwesome, m)
+}
+
 func TestParseHTMLFn(t *testing.T) {
 	wantText := "Span Text"
 	wantAttr := "color:blue"

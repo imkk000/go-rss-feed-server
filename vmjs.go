@@ -2,11 +2,15 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/grafana/sobek"
 	"github.com/mmcdole/gofeed"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/text"
 )
 
 func NewVM() (*sobek.Runtime, error) {
@@ -17,6 +21,7 @@ func NewVM() (*sobek.Runtime, error) {
 		SetFetchFeedFn,
 		SetConvertMapFeedFn,
 		SetParseHTMLFn,
+		SetParseMarkdownAwesomeFn,
 	}
 	vm := sobek.New()
 	for _, fn := range funcs {
@@ -26,6 +31,69 @@ func NewVM() (*sobek.Runtime, error) {
 	}
 
 	return vm, nil
+}
+
+func parseAwesomeLink(text string) []string {
+	// Handle: [title](link) - description
+	// Or: [title](link)
+	if matches := regexp.MustCompile(`\[(.+?)\]\((.+?)\)(?:\s*-\s*(.+))?`).FindStringSubmatch(text); matches != nil {
+		desc := matches[3]
+		if desc == "" {
+			desc = matches[1] // Use title if no description
+		}
+		return []string{matches[1], matches[2], desc}
+	}
+	return nil
+}
+
+func SetParseMarkdownAwesomeFn(vm *sobek.Runtime) error {
+	fn := func(source []byte) ([]Awesome, error) {
+		md := goldmark.New()
+		doc := md.Parser().Parse(text.NewReader(source))
+
+		var awesomes []Awesome
+		var currentTopic []string
+
+		ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+			if !entering {
+				return ast.WalkContinue, nil
+			}
+
+			// Track heading hierarchy
+			if h, ok := n.(*ast.Heading); ok {
+				text := string(h.Lines().Value(source))
+				level := h.Level - 2
+				if level >= 0 && level < 3 {
+					currentTopic = currentTopic[:level]
+					currentTopic = append(currentTopic, text)
+				}
+			}
+
+			// Parse list items
+			if item, ok := n.(*ast.ListItem); ok {
+				if block, ok := item.FirstChild().(*ast.TextBlock); ok && block.ChildCount() > 1 {
+					text := string(block.Lines().Value(source))
+					if parts := parseAwesomeLink(text); parts != nil {
+						awesomes = append(awesomes, Awesome{
+							Topic:       strings.Join(currentTopic, " > "),
+							Title:       parts[0],
+							Link:        parts[1],
+							Description: parts[2],
+						})
+					}
+				}
+			}
+
+			return ast.WalkContinue, nil
+		})
+
+		return awesomes, nil
+	}
+	if err := vm.Set("parseMarkdownAwesome", fn); err != nil {
+		return fmt.Errorf("set parse markdown awesome func: %w", err)
+	}
+
+	return nil
 }
 
 func createSelectionWrapper(vm *sobek.Runtime, sel *goquery.Selection) sobek.Value {
@@ -200,3 +268,10 @@ type (
 	NewSobekFn func(vm *sobek.Runtime) error
 	M          = map[string]any
 )
+
+type Awesome struct {
+	Topic       string
+	Title       string
+	Link        string
+	Description string
+}
