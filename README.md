@@ -19,6 +19,7 @@ Actually, just for fun.
 ### GET /reload
 
 - Reload configuration file
+- Pre-compile program (js)
 - Response no content 200
 
 ### GET /feed/:name
@@ -37,8 +38,18 @@ Actually, just for fun.
     body: string,
 } = get(url: string, { headers: object })
 
-// implement using fmt.Println(v)
-console.log(val)
+// fetch rss feed with gofeed
+{
+    Title: string
+    Items: []*gofeed.Item
+} = fetch_feed(url: string)
+feeds.Items = feeds.Items.filter()
+
+// convert gofeed to map[string]any (general model)
+convertMapFeed(resp)
+
+// implement using fmt.Printf("%#v\n", v)
+console.log(val: any)
 
 // throw panic
 exit("error message")
@@ -46,6 +57,9 @@ exit("error message")
 
 ## Configuration
 
+### From js file
+
+- purpose: custom feed from difference source (json, html)
 - config.yaml - Add feeds table
 
 ```yaml
@@ -79,4 +93,34 @@ const result = {
   updated: new Date(),
 };
 result;
+```
+
+### From url + script
+
+- purpose: filter out with keyword or regex
+- require `url`, but `script` is optional
+- config.yaml - Add feeds table
+
+```yaml
+feeds:
+  myfeed:
+    url: http://myfeed.com/atom
+    script: >-
+      feeds.Items =
+      feeds.Items.filter(item => item.Title === "my feed 1");
+```
+
+- parse script into default template
+- using go `text/template`
+
+```yaml
+const url = "{{.URL}}";
+const url = "http://myfeed.com/atom";
+let feeds = fetchFeed(url);
+
+// inject here
+{{.Script}};
+feeds.Items = feeds.Items.filter(item => item.Title === "my feed 1");
+
+convertMapFeed(feeds);
 ```
