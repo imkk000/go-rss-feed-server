@@ -42,7 +42,7 @@ Actually, just for fun.
 {
     Title: string
     Items: []*gofeed.Item
-} = fetch_feed(url: string)
+} = fetchFeed(url: string)
 feeds.Items = feeds.Items.filter()
 
 // convert gofeed to map[string]any (general model)
