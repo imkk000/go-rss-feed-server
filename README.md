@@ -48,6 +48,20 @@ feeds.Items = feeds.Items.filter()
 // convert gofeed to map[string]any (general model)
 convertMapFeed(resp)
 
+// parse html
+// ignore error because want to run in chain
+{
+    length: int64
+    each: callback func(fn)
+    attr: func() string
+    find: func(selector: string) object
+} = parseHTML(html: string)
+
+const html = parseHTML(content)
+html.
+    find(".container").
+    each((i, elm) => console.log(elm.attr("src")))
+
 // implement using fmt.Printf("%#v\n", v)
 console.log(val: any)
 

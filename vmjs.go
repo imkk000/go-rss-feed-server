@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/grafana/sobek"
 	"github.com/mmcdole/gofeed"
 )
@@ -14,6 +16,7 @@ func NewVM() (*sobek.Runtime, error) {
 		SetGetFn,
 		SetFetchFeedFn,
 		SetConvertMapFeedFn,
+		SetParseHTMLFn,
 	}
 	vm := sobek.New()
 	for _, fn := range funcs {
@@ -23,6 +26,44 @@ func NewVM() (*sobek.Runtime, error) {
 	}
 
 	return vm, nil
+}
+
+func createSelectionWrapper(vm *sobek.Runtime, sel *goquery.Selection) sobek.Value {
+	obj := vm.NewObject()
+	obj.Set("length", sel.Length())
+	obj.Set("find", func(selector string) sobek.Value {
+		return createSelectionWrapper(vm, sel.Find(selector))
+	})
+	obj.Set("text", func() string {
+		return sel.Text()
+	})
+	obj.Set("attr", func(attr string) string {
+		val, _ := sel.Attr(attr)
+		return val
+	})
+	obj.Set("each", func(callback sobek.Callable) {
+		sel.Each(func(i int, s *goquery.Selection) {
+			callback(sobek.Undefined(), vm.ToValue(i), createSelectionWrapper(vm, s))
+		})
+	})
+
+	return obj
+}
+
+func SetParseHTMLFn(vm *sobek.Runtime) error {
+	fn := func(html string) (sobek.Value, error) {
+		doc, err := goquery.NewDocumentFromReader(strings.NewReader(html))
+		if err != nil {
+			return nil, fmt.Errorf("new document: %w", err)
+		}
+
+		return createSelectionWrapper(vm, doc.Selection), nil
+	}
+	if err := vm.Set("parseHTML", fn); err != nil {
+		return fmt.Errorf("set parse html func: %w", err)
+	}
+
+	return nil
 }
 
 func SetConvertMapFeedFn(vm *sobek.Runtime) error {

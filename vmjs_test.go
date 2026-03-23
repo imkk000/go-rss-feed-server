@@ -11,6 +11,50 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestParseHTMLFn(t *testing.T) {
+	wantText := "Span Text"
+	wantAttr := "color:blue"
+	wantLength := int64(3)
+	wantIndexes := []int64{0, 1, 2}
+
+	vm := sobek.New()
+	err := SetParseHTMLFn(vm)
+	assert.NoError(t, err)
+
+	fn, ok := sobek.AssertFunction(vm.Get("parseHTML"))
+	assert.True(t, ok)
+
+	html := `<div class="container" style="color:blue">
+	<table name="test">
+	<th><td>Name</td><td>Value</td></th>
+	<tr><td>Item1</td><td>Value1</td></tr>
+	<tr><td>Item2</td><td>Value2</td></tr>
+	</table>
+	<span>Span Text</span>
+	</div>`
+	result, err := fn(sobek.Undefined(), vm.ToValue(html))
+	m := result.Export().(M)
+	findFn := m["find"].(func(string) sobek.Value)
+	divContainer := findFn(".container").ToObject(vm).Export().(M)
+	attr := divContainer["attr"].(func(string) string)
+	innerFindFn := divContainer["find"].(func(string) sobek.Value)
+	span := innerFindFn("span").ToObject(vm).Export().(M)
+	text := span["text"].(func() string)
+	tableTr := innerFindFn("table tr").ToObject(vm).Export().(M)
+	length := tableTr["length"].(int64)
+	tableTrEach := tableTr["each"].(func(sobek.Callable))
+	var indexes []int64
+	tableTrEach(func(this sobek.Value, args ...sobek.Value) (sobek.Value, error) {
+		indexes = append(indexes, args[0].ToInteger())
+		return nil, nil
+	})
+
+	assert.Equal(t, wantLength, length)
+	assert.Equal(t, wantIndexes, indexes)
+	assert.Equal(t, wantAttr, attr("style"))
+	assert.Equal(t, wantText, text())
+}
+
 func TestConvertMapFeedFn(t *testing.T) {
 	wantItemImage := M{
 		"title": "my image 1",

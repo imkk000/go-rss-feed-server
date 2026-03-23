@@ -3,6 +3,7 @@ module rss-feed-server
 go 1.26
 
 require (
+	github.com/PuerkitoBio/goquery v1.8.0
 	github.com/go-resty/resty/v2 v2.17.2
 	github.com/goccy/go-yaml v1.19.2
 	github.com/gorilla/feeds v1.2.0
@@ -14,7 +15,6 @@ require (
 )
 
 require (
-	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/andybalholm/cascadia v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
