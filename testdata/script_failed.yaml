@@ -1,0 +1,6 @@
+---
+feeds:
+  myfeed:
+    url: "http://myfeed.com"
+    script: >-
+      feeds.Items =

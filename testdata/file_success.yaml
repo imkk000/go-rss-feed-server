@@ -1,0 +1,4 @@
+---
+feeds:
+  myfeed:
+    file: ./testdata/file_success.js

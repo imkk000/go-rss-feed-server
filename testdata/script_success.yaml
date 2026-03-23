@@ -1,0 +1,7 @@
+---
+feeds:
+  myfeed:
+    url: "http://myfeed.com"
+    script: >-
+      feeds.Items =
+      feeds.Items.filter(item => item.Title === "My Feed 1");
