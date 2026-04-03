@@ -56,7 +56,7 @@ convertMapFeed(resp)
     attr: func(attrName: string) string
     setAttr: func(attrName: string, val: string)
     find: func(selector: string) object
-    html: func() string,
+    html: func() string
     remove: func()
 } = parseHTML(html: string)
 
