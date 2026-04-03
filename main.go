@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"net/http"
 
@@ -74,7 +75,12 @@ func main() {
 		return c.String(http.StatusOK, atom)
 	})
 
-	if err := e.Start(addr); err != nil {
+	sc := echo.StartConfig{
+		Address:    addr,
+		HideBanner: true,
+		HidePort:   true,
+	}
+	if err := sc.Start(context.Background(), e); err != nil {
 		log.Fatal().Err(err).Msgf("run server at %s", addr)
 	}
 }

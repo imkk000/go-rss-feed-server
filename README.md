@@ -53,8 +53,11 @@ convertMapFeed(resp)
 {
     length: int64
     each: callback func(fn)
-    attr: func() string
+    attr: func(attrName: string) string
+    setAttr: func(attrName: string, val: string)
     find: func(selector: string) object
+    html: func() string,
+    remove: func()
 } = parseHTML(html: string)
 
 const html = parseHTML(content: string)
@@ -75,6 +78,9 @@ console.log(val: any)
 
 // throw panic
 exit("error message")
+
+// hash sha256
+const hexSHA256 = sha256(s: string)
 ```
 
 ## Configuration

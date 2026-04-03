@@ -11,6 +11,7 @@ FROM docker.io/alpine:3.23
 
 WORKDIR /opt/rss
 COPY --from=builder /builder/main server
+RUN chown nobody:nobody server
 
 USER nobody
 CMD ["/opt/rss/server"]

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"regexp"
 	"strings"
@@ -22,6 +24,7 @@ func NewVM() (*sobek.Runtime, error) {
 		SetConvertMapFeedFn,
 		SetParseHTMLFn,
 		SetParseMarkdownAwesomeFn,
+		SetHashSHA256,
 	}
 	vm := sobek.New()
 	for _, fn := range funcs {
@@ -109,10 +112,20 @@ func createSelectionWrapper(vm *sobek.Runtime, sel *goquery.Selection) sobek.Val
 		val, _ := sel.Attr(attr)
 		return val
 	})
+	obj.Set("setAttr", func(attr, value string) {
+		sel.SetAttr(attr, value)
+	})
 	obj.Set("each", func(callback sobek.Callable) {
 		sel.Each(func(i int, s *goquery.Selection) {
 			callback(sobek.Undefined(), vm.ToValue(i), createSelectionWrapper(vm, s))
 		})
+	})
+	obj.Set("html", func() string {
+		ret, _ := sel.Html()
+		return ret
+	})
+	obj.Set("remove", func() {
+		sel.Remove()
 	})
 
 	return obj
@@ -246,7 +259,19 @@ func SetExitFn(vm *sobek.Runtime) error {
 		panic(vm.ToValue(msg))
 	}
 	if err := vm.Set("exit", fn); err != nil {
-		return fmt.Errorf("set func: %w", err)
+		return fmt.Errorf("set exit func: %w", err)
+	}
+
+	return nil
+}
+
+func SetHashSHA256(vm *sobek.Runtime) error {
+	fn := func(s string) string {
+		h := sha256.Sum256([]byte(s))
+		return hex.EncodeToString(h[:])
+	}
+	if err := vm.Set("sha256", fn); err != nil {
+		return fmt.Errorf("set sha256 func: %w", err)
 	}
 
 	return nil

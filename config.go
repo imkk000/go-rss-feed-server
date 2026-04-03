@@ -29,7 +29,7 @@ var (
 )
 
 func LoadConfigProgram(configFilename string) (err error) {
-	fs, err := os.OpenInRoot(".", configFilename)
+	fs, err := os.Open(configFilename)
 	if err != nil {
 		return fmt.Errorf("read configuration file: %w", err)
 	}
